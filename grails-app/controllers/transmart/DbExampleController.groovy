@@ -18,41 +18,13 @@
  ******************************************************************/
   
 
-import org.springframework.security.web.authentication.session.ConcurrentSessionControlStrategy
-import org.springframework.security.web.session.ConcurrentSessionFilter
-import org.springframework.security.core.session.SessionRegistryImpl
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.DefaultRedirectStrategy
-import DbOracle
-import DbPostgres
+package transmart
 
-String[] roots = ["/etc/transmart"]
-def binding = [] as Binding
-def engine = new GroovyScriptEngine(roots)
-engine.run("DbTypeConfig.groovy", binding)
-def dbType = binding.getVariable("transmartDbType")
+class DbExampleController {
 
-beans = {
-	dataSourcePlaceHolder(com.recomdata.util.DataSourcePlaceHolder){
-		dataSource = ref('dataSource')
-	}
-	sessionRegistry(SessionRegistryImpl)
-	sessionAuthenticationStrategy(ConcurrentSessionControlStrategy, sessionRegistry) {
-		maximumSessions = 10
-	}
-	concurrentSessionFilter(ConcurrentSessionFilter){
-		sessionRegistry = sessionRegistry
-		expiredUrl = '/login'
-	}
-	userDetailsService(com.recomdata.security.AuthUserDetailsService)
-	redirectStrategy(DefaultRedirectStrategy)
+    def dbBean
 
-    if (dbType == "oracle")
-    {
-        dbBean(DbOracle)
-    }
-    else
-    {
-        dbBean(DbPostgres)
+    def index = { 
+        render dbBean.dbType()
     }
 }
