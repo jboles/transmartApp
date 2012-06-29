@@ -26,12 +26,6 @@ import org.springframework.security.web.DefaultRedirectStrategy
 import DbOracle
 import DbPostgres
 
-String[] roots = ["/etc/transmart"]
-def binding = [] as Binding
-def engine = new GroovyScriptEngine(roots)
-engine.run("DbTypeConfig.groovy", binding)
-def dbType = binding.getVariable("transmartDbType")
-
 beans = {
 	dataSourcePlaceHolder(com.recomdata.util.DataSourcePlaceHolder){
 		dataSource = ref('dataSource')
@@ -47,12 +41,54 @@ beans = {
 	userDetailsService(com.recomdata.security.AuthUserDetailsService)
 	redirectStrategy(DefaultRedirectStrategy)
 
-    if (dbType == "oracle")
+    if (isOracleConfigured())
     {
+        println("Oracle configured")
         dbBean(DbOracle)
     }
     else
     {
+        println("Postgres configured")
         dbBean(DbPostgres)
+    }
+}
+
+def isOracleConfigured()
+{
+    def locations = configurationLocations()
+
+    for (loc in locations)
+    {
+        def config = openConfig(loc)
+        if (config)
+        {
+            return config.dataSource.driverClassName ==~ /.*oracle.*/
+        }
+    }
+
+    println("Could not find configuration files");
+    return false;
+}
+
+def configurationLocations()
+{
+    def configLocations = ["/etc/transmart", "/usr/local/transmart"]
+    def env = System.getenv()
+    def configOverride = env['TRANSMART_CONFIG']
+    def locations 
+
+    return configOverride ? [configOverride] : configLocations
+}
+
+def openConfig(String dir)
+{
+    try
+    {
+        def config = new ConfigSlurper().parse(new File("${dir}/DataSource.groovy").toURL())
+        return config
+    }
+    catch (Throwable e)
+    {
+        return null
     }
 }
