@@ -1,9 +1,9 @@
 import grails.converters.JSON
+import grails.plugin.springsecurity.SpringSecurityUtils
 import org.transmart.searchapp.AccessLog
+import org.transmart.searchapp.AuthUser
 
 import javax.servlet.http.HttpServletResponse
-
-import org.codehaus.groovy.grails.plugins.springsecurity.SpringSecurityUtils
 
 import org.springframework.security.authentication.AccountExpiredException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -38,9 +38,9 @@ class LoginController {
 
     def forceAuth = {
         session.invalidate();
-        String view = 'auth'
-        String postUrl = "${request.contextPath}${config.apf.filterProcessesUrl}"
-        render view: view, model: [postUrl: postUrl]
+        def config = SpringSecurityUtils.securityConfig
+        def postUrl = "${request.contextPath}${config.apf.filterProcessesUrl}"
+        render view: 'auth', model: [postUrl: postUrl]
     }
 
     /**
